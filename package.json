@@ -1,0 +1,44 @@
+{
+  "name": "incorporate-test-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon -w src --exec \"babel-node src --presets @babel/preset-env\"",
+    "build": "babel src -s -D -d dist --presets @babel/preset-env",
+    "start": "node ./dist/index.js",
+    "stop": "NODE_ENV=production node dist --watch",
+    "lint": "eslint src",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@babel/cli": "^7.16.7",
+    "@babel/polyfill": "^7.12.1",
+    "axios": "^0.24.0",
+    "cors": "^2.8.5",
+    "dotenv": "^10.0.0",
+    "express": "^4.17.2",
+    "https": "^1.0.0",
+    "jsonwebtoken": "^8.5.1",
+    "md5": "^2.3.0",
+    "mongodb": "^4.3.0",
+    "mongoose": "^6.1.5",
+    "passport": "^0.5.2",
+    "passport-local": "^1.0.0",
+    "passport-local-mongoose": "^6.1.0",
+    "path": "^0.12.7",
+    "request": "^2.88.2"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.16.7",
+    "@babel/node": "^7.16.7",
+    "@babel/preset-env": "^7.16.7",
+    "@types/node": "^17.0.8",
+    "babel-eslint": "^10.1.0",
+    "eslint": "^8.6.0",
+    "nodemon": "^2.0.15"
+  }
+}
