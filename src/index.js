@@ -10,7 +10,14 @@ import routes from "./routes";
 var cors = require('cors')
 var app = express();
 
-app.use(cors());
+// app.use(cors());
+
+app.use(
+    cors({
+        origin: "http://localhost:3000", 
+        credentials: true,
+    })
+);
 
 const LocalStrategy = require('passport-local').Strategy;
 let User = require('./model/user');
