@@ -10,20 +10,28 @@ import routes from "./routes";
 var cors = require('cors')
 var app = express();
 
-// app.use(cors());
+app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+    res.setHeader('Access-Control-Allow-Headers', 'Authorization, Origin, Content-Type, Accept');
+    res.setHeader('Access-Control-Allow-Credentials', true);
+    next();
+  });
 
-app.use(
-    cors({
-        origin: '*',
-        methods: [
-            'GET',
-            'POST',
-        ],
-        allowedHeaders: [
-            'Content-Type',
-        ],
-    })
-);
+app.use(cors());
+
+// app.use(
+//     cors({
+//         origin: '*',
+//         methods: [
+//             'GET',
+//             'POST',
+//         ],
+//         allowedHeaders: [
+//             'Content-Type',
+//         ],
+//     })
+// );
 
 const LocalStrategy = require('passport-local').Strategy;
 let User = require('./model/user');
