@@ -19,6 +19,9 @@ app.use(
             'GET',
             'POST',
         ],
+        allowedHeaders: [
+            'Content-Type',
+        ],
     })
 );
 
