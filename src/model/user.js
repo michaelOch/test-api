@@ -15,6 +15,9 @@ var userSchema = new Schema({
   name: {
       type: String
   },
+  refreshToken : {
+      type: String
+  },
   date:  { 
     type: Date, 
     default: Date.now

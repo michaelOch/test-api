@@ -5,6 +5,7 @@ import '@babel/polyfill';
 import express from "express";
 import passport from "passport";
 import {join} from 'path';
+const cookieParser = require('cookie-parser');
 import routes from "./routes";
 
 var cors = require('cors')
@@ -32,6 +33,9 @@ app.use(cors());
 //         ],
 //     })
 // );
+
+//  Use cookie
+app.use(cookieParser());
 
 const LocalStrategy = require('passport-local').Strategy;
 let User = require('./model/user');

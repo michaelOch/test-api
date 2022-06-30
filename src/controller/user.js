@@ -3,6 +3,7 @@ import User from "../model/user";
 import passport from "passport";
 import env from "dotenv";
 env.config();
+import jwt from "jsonwebtoken";
 
 import generateToken from "../helper/generateToken";
 import { authentication } from "../middleware/adminAuth";
@@ -76,12 +77,37 @@ export default ({ config, db }) => {
 			if (user) {
                 console.log('Found a user match...');
                 const token = generateToken(user);
-                res.status(200).json({
-                    token,
-                    user: {
-                        _id: user._id,
-                        email: user.email,
+
+                //  Create refresh token
+                const refreshToken = jwt.sign(
+                    { id: user.id, email: user.email },
+                    process.env.SECRET, 
+                    { expiresIn: '15s' }
+                )
+
+                User.update({ refreshToken }, {
+                    where: {
+                        _id: user.id
                     }
+                })
+                .then(user => {
+                    
+                    res.cookie('jwt', refreshToken, { httpOnly: true, sameSite: 'none', secure: true, maxAge: 24 * 60 * 60 * 1000 })
+                    res.status(200).json({
+                        token,
+                        user: {
+                            _id: user._id,
+                            email: user.email,
+                        }
+                    });
+                    return;
+                })
+                .catch(err => {
+                    console.log(err);
+                    return res.status(500).send({
+                        status: false,
+                        message: err
+                    });
                 });
 
 			} else {
@@ -113,6 +139,78 @@ export default ({ config, db }) => {
                     }
                 });
             }
+        })
+    });
+
+    //  Handle refresh token
+    api.get('/refreshtoken', async (req, res) => {
+
+        console.log('Inside refresh token route');
+
+        const cookies = req.cookies;
+        if(!cookies?.jwt) return res.sendStatus(401);
+        console.log(cookies.jwt);
+
+        const refreshToken = cookies.jwt;
+
+        await User.findOne({ refreshToken: refreshToken }, (err, user) => {
+            if (err) {
+                console.log("Can't find the user")
+                return res.status(403).json({ status: false, msg: "Can't find the user" });
+            }
+
+            if (user) {
+                jwt.verify(
+                    refreshToken,
+                    process.env.SECRET,
+                    (err, authorizedUser) => {
+                        if (err || user.email !== authorizedUser.email) return res.sendStatus(403);
+                        const token = generateToken(user);
+                        res.status(200).json({
+                            token,
+                            user: {
+                                _id: user._id,
+                                email: user.email,
+                            }
+                        });
+                    }
+                )
+            }
+        })
+    });
+
+    // Logout
+    api.get('/logout', async (req, res) => {
+        
+        const cookies = req.cookies;
+        if (!cookies?.jwt) return res.sendStatus(204); // No content
+
+        const refreshToken = cookies.jwt;
+
+        await User.findOne({ refreshToken: refreshToken }, (err, user) => {
+            if (err) {
+                res.clearCookie('jwt', { httpOnly: true, sameSite: 'none', secure: true });
+                return res.sendStatus(204);
+            }
+
+            // Delete refreshToken from DB
+            User.update({ refreshToken: '' }, {
+                where: {
+                    _id: user.id
+                }
+            })
+            .then(user => {
+                
+                res.clearCookie('jwt', { httpOnly: true, sameSite: 'none', secure: true });
+                res.sendStatus(204);
+            })
+            .catch(err => {
+                console.log(err);
+                return res.status(500).send({
+                    status: false,
+                    message: err
+                });
+            });
         })
     });
 

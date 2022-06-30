@@ -3,7 +3,7 @@ env.config();
 import jwt from "jsonwebtoken";
 
 
-const TOKEN_TIME = '0.01d';
+const TOKEN_TIME = '10s';
 
 const generateToken = (user) => {
   
