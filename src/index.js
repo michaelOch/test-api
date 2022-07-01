@@ -6,6 +6,8 @@ import express from "express";
 import passport from "passport";
 import {join} from 'path';
 const cookieParser = require('cookie-parser');
+const credentials = require('./middleware/credentials');
+const corsOption = require('./config/corsOption');
 import routes from "./routes";
 
 var cors = require('cors')
@@ -17,9 +19,11 @@ app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Headers', 'Authorization, Origin, Content-Type, Accept');
     res.setHeader('Access-Control-Allow-Credentials', true);
     next();
-  });
+});
 
-app.use(cors());
+app.use(credentials);
+
+app.use(cors(corsOption));
 
 // app.use(
 //     cors({
