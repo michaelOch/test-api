@@ -80,35 +80,32 @@ export default ({ config, db }) => {
 
                 //  Create refresh token
                 const refreshToken = jwt.sign(
-                    { id: user.id, email: user.email },
+                    { id: user._id, email: user.email },
                     process.env.SECRET, 
                     { expiresIn: '15s' }
                 )
 
-                User.update({ refreshToken }, {
-                    where: {
-                        _id: user.id
-                    }
-                })
-                .then(user => {
-                    
+                try {
+                    const response = await User.findOne({ _id: user._id });
+
+                    await response.updateOne({ refreshToken: refreshToken })
+
                     res.cookie('jwt', refreshToken, { httpOnly: true, sameSite: 'none', secure: true, maxAge: 24 * 60 * 60 * 1000 })
-                    res.status(200).json({
-                        token,
-                        user: {
-                            _id: user._id,
-                            email: user.email,
-                        }
-                    });
+                        res.status(200).json({
+                            token,
+                            user: {
+                                _id: user._id,
+                                email: user.email,
+                            }
+                        });
                     return;
-                })
-                .catch(err => {
-                    console.log(err);
+                } catch (error) {
+                    console.log(error);
                     return res.status(500).send({
                         status: false,
                         message: err
                     });
-                });
+                }
 
 			} else {
 				// If user is not found
@@ -119,31 +116,8 @@ export default ({ config, db }) => {
 		})(req, res)
     });
 
-    api.get('/:userId', authentication, (req, res) => {
-
-        User.findById(req.params.userId, (err, user) => {
-            if (err) {
-                console.log("Can't find the user")
-                res.status(500).json({ status: false, msg: "Can't find the user" });
-				return;
-            }
-
-            if (user) {
-                console.log("Found the user")
-                res.json({
-                    user: {
-                        _id: user._id,
-                        date: user.date,
-                        email: user.email,
-                        name: user.name
-                    }
-                });
-            }
-        })
-    });
-
     //  Handle refresh token
-    api.get('/refreshtoken', async (req, res) => {
+    api.get('/refresh', (req, res) => {
 
         console.log('Inside refresh token route');
 
@@ -153,19 +127,26 @@ export default ({ config, db }) => {
 
         const refreshToken = cookies.jwt;
 
-        await User.findOne({ refreshToken: refreshToken }, (err, user) => {
+        User.findOne({ refreshToken: refreshToken }, (err, user) => {
+            console.log("Trying to find the user")
             if (err) {
                 console.log("Can't find the user")
                 return res.status(403).json({ status: false, msg: "Can't find the user" });
             }
 
+            console.log("Passed error stage! Good!");
+
             if (user) {
+                console.log("Found user")
                 jwt.verify(
                     refreshToken,
                     process.env.SECRET,
                     (err, authorizedUser) => {
+                        console.log('User Email - ' + user.email);
+                        console.log('Authorized Email - ' + authorizedUser.email);
                         if (err || user.email !== authorizedUser.email) return res.sendStatus(403);
                         const token = generateToken(user);
+                        console.log('New token: ' + token);
                         res.status(200).json({
                             token,
                             user: {
@@ -211,6 +192,29 @@ export default ({ config, db }) => {
                     message: err
                 });
             });
+        })
+    });
+
+    api.get('/:userId', authentication, (req, res) => {
+
+        User.findById(req.params.userId, (err, user) => {
+            if (err) {
+                console.log("Can't find the user")
+                res.status(500).json({ status: false, msg: "Can't find the user" });
+				return;
+            }
+
+            if (user) {
+                console.log("Found the user")
+                res.json({
+                    user: {
+                        _id: user._id,
+                        date: user.date,
+                        email: user.email,
+                        name: user.name
+                    }
+                });
+            }
         })
     });
 
