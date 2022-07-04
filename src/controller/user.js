@@ -11,8 +11,19 @@ import { authentication } from "../middleware/adminAuth";
 export default ({ config, db }) => {
     const api = Router(); // 'user'
 
-	api.get('/', async (req, res) => {
-        return res.send({msg: "User route"});
+	api.get('/', authentication, async (req, res) => {
+        
+        User
+            .find({}, null, { sort: { date: 'desc' } })
+            .exec((err, users) => {
+                if (err) {
+                    return res.status(505).json({ status: false, message: "A server error occured" });
+                }
+
+                if (users) {
+                    res.status(200).send({ status: true, users: users });
+                }
+            });
     });
 
     api.post('/register', async (req, res) => {
@@ -82,7 +93,7 @@ export default ({ config, db }) => {
                 const refreshToken = jwt.sign(
                     { id: user._id, email: user.email },
                     process.env.SECRET, 
-                    { expiresIn: '15s' }
+                    { expiresIn: '5m' }
                 )
 
                 try {
@@ -142,11 +153,11 @@ export default ({ config, db }) => {
                     refreshToken,
                     process.env.SECRET,
                     (err, authorizedUser) => {
-                        console.log('User Email - ' + user.email);
-                        console.log('Authorized Email - ' + authorizedUser.email);
+                        // console.log(`User Email - ${user?.email}`);
+                        // console.log(`Authorized Email - ${authorizedUser?.email}`);
                         if (err || user.email !== authorizedUser.email) return res.sendStatus(403);
                         const token = generateToken(user);
-                        console.log('New token: ' + token);
+                        // console.log('New token: ' + token);
                         res.status(200).json({
                             token,
                             user: {
