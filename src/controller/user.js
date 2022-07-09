@@ -74,7 +74,7 @@ export default ({ config, db }) => {
 
 	});
 
-	api.post('/login', (req, res) => {
+	api.post('/login', async (req, res) => {
         console.log('Welcome to Login')
 
 		passport.authenticate('local', async function (err, user) {
@@ -107,6 +107,7 @@ export default ({ config, db }) => {
                             user: {
                                 _id: user._id,
                                 email: user.email,
+                                name: user.name
                             }
                         });
                     return;
@@ -163,6 +164,7 @@ export default ({ config, db }) => {
                             user: {
                                 _id: user._id,
                                 email: user.email,
+                                name: user.name
                             }
                         });
                     }
@@ -179,7 +181,7 @@ export default ({ config, db }) => {
 
         const refreshToken = cookies.jwt;
 
-        await User.findOne({ refreshToken: refreshToken }, (err, user) => {
+        User.findOne({ refreshToken: refreshToken }, (err, user) => {
             if (err) {
                 res.clearCookie('jwt', { httpOnly: true, sameSite: 'none', secure: true });
                 return res.sendStatus(204);
@@ -206,7 +208,7 @@ export default ({ config, db }) => {
         })
     });
 
-    api.get('/:userId', authentication, (req, res) => {
+    api.get('/:userId', authentication, async (req, res) => {
 
         User.findById(req.params.userId, (err, user) => {
             if (err) {
